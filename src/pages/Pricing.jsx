@@ -151,7 +151,7 @@ export default function Pricing() {
                     </div>
                     <h4 style={{ marginBottom: 8, color: '#111827' }}>Vérification en cours...</h4>
                     <p className="text-muted text-sm" style={{ marginBottom: 0 }}>
-                      Nous confirmons votre paiement avec Chariow.<br />
+                      Nous confirmons votre paiement.<br />
                       Cela peut prendre quelques secondes.
                     </p>
                   </>
@@ -219,7 +219,7 @@ export default function Pricing() {
                   S'abonner pour 1 mois
                 </button>
                 <p className="text-xs text-muted text-center" style={{ marginTop: 16 }}>
-                  Paiement sécurisé via Chariow. Accès immédiat après validation.
+                  Paiement sécurisé. Accès immédiat après validation.
                 </p>
               </>
             )}
