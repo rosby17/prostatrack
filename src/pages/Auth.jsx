@@ -9,6 +9,11 @@ export function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showReset, setShowReset] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetSent, setResetSent] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetError, setResetError] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -23,7 +28,77 @@ export function LoginPage() {
     }
   }
 
+  const handleReset = async (e) => {
+    e.preventDefault()
+    setResetLoading(true)
+    setResetError('')
+    const { supabase } = await import('../lib/supabase')
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/#/reset-password`,
+    })
+    setResetLoading(false)
+    if (error) {
+      setResetError("Impossible d'envoyer l'email. Vérifiez l'adresse.")
+    } else {
+      setResetSent(true)
+    }
+  }
+
   const handleDemo = () => navigate('/dashboard?demo=true')
+
+  if (showReset) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <div className="auth-logo">
+            <div className="auth-logo-dot" />
+            <span>ProstaTrack</span>
+          </div>
+          <h1 className="auth-title">Mot de passe oublié</h1>
+          <p className="auth-sub">Entrez votre email pour recevoir un lien de réinitialisation.</p>
+
+          {resetSent ? (
+            <div style={{ textAlign: 'center', padding: '24px 0' }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>📬</div>
+              <p style={{ marginBottom: 8 }}><strong>Email envoyé !</strong></p>
+              <p className="text-muted text-sm" style={{ marginBottom: 24 }}>
+                Vérifiez votre boîte mail sur <strong>{resetEmail}</strong> et cliquez sur le lien pour réinitialiser votre mot de passe.
+              </p>
+              <button className="btn btn-outline btn-full" onClick={() => { setShowReset(false); setResetSent(false) }}>
+                Retour à la connexion
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleReset}>
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input
+                  className="form-input"
+                  type="email"
+                  placeholder="vous@exemple.com"
+                  value={resetEmail}
+                  onChange={e => setResetEmail(e.target.value)}
+                  required
+                />
+              </div>
+              {resetError && <p className="form-error" style={{ marginBottom: 12 }}>{resetError}</p>}
+              <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={resetLoading}>
+                {resetLoading ? <span className="spinner" /> : 'Envoyer le lien'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-full"
+                style={{ marginTop: 12 }}
+                onClick={() => setShowReset(false)}
+              >
+                Retour
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="auth-page">
@@ -48,7 +123,16 @@ export function LoginPage() {
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Mot de passe</label>
+            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              Mot de passe
+              <button
+                type="button"
+                onClick={() => { setShowReset(true); setResetEmail(form.email) }}
+                style={{ background: 'none', border: 'none', color: 'var(--teal)', fontSize: 13, cursor: 'pointer', padding: 0, fontWeight: 500 }}
+              >
+                Mot de passe oublié ?
+              </button>
+            </label>
             <input
               className="form-input"
               type="password"
