@@ -11,7 +11,7 @@ export default function Pricing() {
 
   const handleSubscribe = () => {
     // Redirect to the Chariow payment link in a new tab
-    window.open('https://nextagehealth.mychariow.shop/prd_sasc20', '_blank')
+    window.open('https://nextagehealth.mychariow.shop/prd_1dkmqi', '_blank')
     // Show the pending validation UI
     setIsPending(true)
   }
@@ -20,7 +20,7 @@ export default function Pricing() {
     setIsChecking(true)
     const premium = await checkStatus()
     setIsChecking(false)
-    
+
     if (premium) {
       navigate('/dashboard')
     } else {
@@ -87,7 +87,7 @@ export default function Pricing() {
                 Pas d'abonnement. Payez une fois, profitez-en pour toujours.
               </p>
             </div>
-            
+
             {isPending ? (
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
                 <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
@@ -95,8 +95,8 @@ export default function Pricing() {
                 <p className="text-muted text-sm" style={{ marginBottom: '24px' }}>
                   Une fois votre paiement terminé sur la page sécurisée, cliquez ci-dessous pour vérifier l'activation de votre accès.
                 </p>
-                <button 
-                  className="btn btn-primary btn-full" 
+                <button
+                  className="btn btn-primary btn-full"
                   onClick={handleCheck}
                   disabled={isChecking}
                 >
