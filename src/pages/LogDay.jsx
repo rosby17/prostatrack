@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { format, subDays } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuth } from '../context/AuthContext'
@@ -72,7 +72,7 @@ export default function LogDay() {
   const [params] = useSearchParams()
   const isDemo = params.get('demo') === 'true'
   const { user } = useAuth()
-  const { logs, addLog } = useUserData(isDemo)
+  const { logs, todayLog, addLog } = useUserData(isDemo)
 
   const [step, setStep] = useState(0)
   const [values, setValues] = useState({
@@ -90,7 +90,6 @@ export default function LogDay() {
   const currentField = FIELDS[step]
   const isLast = step === FIELDS.length - 1
 
-  // Historique des 3 derniers jours pour le champ actuel
   const recentValues = [3, 2, 1].map(daysAgo => {
     const date = format(subDays(new Date(), daysAgo), 'yyyy-MM-dd')
     const log = logs.find(l => l.date === date)
@@ -104,15 +103,9 @@ export default function LogDay() {
   }
 
   const handleNext = async () => {
-    if (!isLast) {
-      setStep(s => s + 1)
-      return
-    }
-
-    // Dernier step — sauvegarder dans Supabase
+    if (!isLast) { setStep(s => s + 1); return }
     setSaving(true)
     setError('')
-
     const { error } = await addLog({
       date: today,
       night_wakings: Number(values.night_wakings),
@@ -121,19 +114,34 @@ export default function LogDay() {
       energy_level: values.energy_level,
       notes,
     })
-
     setSaving(false)
-
     if (error && !isDemo) {
       setError("Erreur lors de l'enregistrement. Veuillez réessayer.")
       return
     }
-
     setSaved(true)
     setTimeout(() => navigate(`/dashboard${isDemo ? '?demo=true' : ''}`), 2000)
   }
 
   const setValue = (key, val) => setValues(p => ({ ...p, [key]: val }))
+
+  // Déjà saisi aujourd'hui
+  if (todayLog && !isDemo) {
+    return (
+      <div className="log-success">
+        <div className="log-success__icon" style={{ background: 'var(--teal-light)', color: 'var(--teal)' }}>
+          <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2>Journal déjà saisi aujourd'hui ✓</h2>
+        <p className="text-muted">Vous avez déjà enregistré votre journal pour aujourd'hui.<br />Revenez demain pour continuer votre suivi !</p>
+        <Link to="/dashboard" className="btn btn-primary" style={{ marginTop: 24 }}>
+          Retour au tableau de bord
+        </Link>
+      </div>
+    )
+  }
 
   if (saved) {
     return (
@@ -157,17 +165,12 @@ export default function LogDay() {
         <p className="text-muted text-sm">4 questions · environ 60 secondes</p>
       </div>
 
-      {/* PROGRESS */}
       <div className="log-progress">
         {FIELDS.map((_, i) => (
-          <div
-            key={i}
-            className={`log-progress__dot ${i <= step ? 'log-progress__dot--active' : ''} ${i < step ? 'log-progress__dot--done' : ''}`}
-          />
+          <div key={i} className={`log-progress__dot ${i <= step ? 'log-progress__dot--active' : ''} ${i < step ? 'log-progress__dot--done' : ''}`} />
         ))}
       </div>
 
-      {/* FIELD CARD */}
       <div className="log-card card">
         <div className="log-card__icon">
           <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
@@ -181,27 +184,17 @@ export default function LogDay() {
         <div className="log-card__input">
           {currentField.type === 'number' ? (
             <div className="number-input">
-              <button
-                type="button"
-                className="number-btn"
-                onClick={() => setValue(currentField.key, Math.max(0, (values[currentField.key] || 0) - 1))}
-              >−</button>
+              <button type="button" className="number-btn"
+                onClick={() => setValue(currentField.key, Math.max(0, (values[currentField.key] || 0) - 1))}>−</button>
               <div className="number-display">
                 <strong>{values[currentField.key] === '' ? '—' : values[currentField.key]}</strong>
                 <span>{currentField.unit}</span>
               </div>
-              <button
-                type="button"
-                className="number-btn"
-                onClick={() => setValue(currentField.key, Math.min(currentField.max, (values[currentField.key] || 0) + 1))}
-              >+</button>
+              <button type="button" className="number-btn"
+                onClick={() => setValue(currentField.key, Math.min(currentField.max, (values[currentField.key] || 0) + 1))}>+</button>
             </div>
           ) : (
-            <ScaleSelector
-              field={currentField}
-              value={values[currentField.key]}
-              onChange={v => setValue(currentField.key, v)}
-            />
+            <ScaleSelector field={currentField} value={values[currentField.key]} onChange={v => setValue(currentField.key, v)} />
           )}
         </div>
 
@@ -209,11 +202,9 @@ export default function LogDay() {
           <div className="form-group" style={{ marginTop: 24, marginBottom: 0 }}>
             <label className="form-label">Note personnelle (optionnel)</label>
             <textarea
-              className="form-input"
-              rows={3}
+              className="form-input" rows={3}
               placeholder="Comment vous sentez-vous aujourd'hui ? Quelque chose à noter ?"
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
+              value={notes} onChange={e => setNotes(e.target.value)}
               style={{ resize: 'vertical' }}
             />
           </div>
@@ -227,13 +218,8 @@ export default function LogDay() {
               ← Précédent
             </button>
           )}
-          <button
-            type="button"
-            className="btn btn-primary"
-            disabled={!isStepValid() || saving}
-            onClick={handleNext}
-            style={{ marginLeft: 'auto' }}
-          >
+          <button type="button" className="btn btn-primary" disabled={!isStepValid() || saving}
+            onClick={handleNext} style={{ marginLeft: 'auto' }}>
             {saving
               ? <span className="spinner" style={{ borderColor: 'var(--teal-light)', borderTopColor: 'var(--white)' }} />
               : isLast ? 'Enregistrer mon journal' : 'Suivant →'
@@ -242,15 +228,12 @@ export default function LogDay() {
         </div>
       </div>
 
-      {/* HISTORIQUE 3 DERNIERS JOURS */}
       <div className="log-history card card-sm">
         <p className="text-xs text-muted" style={{ marginBottom: 12, fontWeight: 600 }}>VOS 3 DERNIERS JOURS</p>
         <div className="log-history__grid">
           {[3, 2, 1].map((daysAgo, i) => (
             <div key={daysAgo} className="log-history__item">
-              <span className="text-xs text-muted">
-                {format(subDays(new Date(), daysAgo), 'EEE d', { locale: fr })}
-              </span>
+              <span className="text-xs text-muted">{format(subDays(new Date(), daysAgo), 'EEE d', { locale: fr })}</span>
               <strong style={{ fontSize: 18, color: 'var(--dark)' }}>
                 {recentValues[i] !== null ? recentValues[i] : '—'}
               </strong>

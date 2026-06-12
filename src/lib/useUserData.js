@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
+import { format } from 'date-fns'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { MOCK_LOGS, MOCK_PROGRAM } from './mockData'
 
-// Hook principal — retourne les vraies données si connecté, mock si démo
 export function useUserData(isDemo = false) {
   const { user } = useAuth()
   const [logs, setLogs] = useState([])
+  const [todayLog, setTodayLog] = useState(null)
   const [program, setProgram] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -14,6 +15,7 @@ export function useUserData(isDemo = false) {
     if (isDemo || !user) {
       setLogs(MOCK_LOGS)
       setProgram(MOCK_PROGRAM)
+      setTodayLog(null)
       setLoading(false)
       return
     }
@@ -36,17 +38,17 @@ export function useUserData(isDemo = false) {
 
     if (!error && data) {
       setLogs(data)
+      const today = format(new Date(), 'yyyy-MM-dd')
+      setTodayLog(data.find(l => l.date === today) || null)
     }
   }
 
   const fetchProgram = async () => {
-    // Récupérer la progression depuis Supabase
     const { data: progressData } = await supabase
       .from('program_progress')
       .select('*')
       .eq('user_id', user.id)
 
-    // Merger avec la liste fixe du programme
     const mergedProgram = MOCK_PROGRAM.map(item => {
       const saved = progressData?.find(
         p => p.week === item.week && p.title === item.title
@@ -62,7 +64,7 @@ export function useUserData(isDemo = false) {
 
     const { data, error } = await supabase
       .from('daily_logs')
-      .upsert({
+      .insert({
         user_id: user.id,
         date: logData.date,
         night_wakings: logData.night_wakings,
@@ -74,9 +76,7 @@ export function useUserData(isDemo = false) {
       .select()
       .single()
 
-    if (!error) {
-      await fetchLogs() // Rafraîchir
-    }
+    if (!error) await fetchLogs()
     return { data, error }
   }
 
@@ -98,6 +98,7 @@ export function useUserData(isDemo = false) {
 
   return {
     logs,
+    todayLog,
     program,
     loading,
     addLog,
