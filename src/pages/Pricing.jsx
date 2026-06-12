@@ -8,6 +8,7 @@ export default function Pricing() {
   const navigate = useNavigate()
   const [isPending, setIsPending] = useState(false)
   const [isChecking, setIsChecking] = useState(false)
+  const [checkStep, setCheckStep] = useState(0) // 0=idle 1=checking 2=failed
 
   const handleSubscribe = () => {
     window.open('https://nextagehealth.mychariow.shop/prd_1dkmqi', '_blank')
@@ -16,13 +17,22 @@ export default function Pricing() {
 
   const handleCheck = async () => {
     setIsChecking(true)
-    const premium = await checkStatus()
+    setCheckStep(1)
+
+    // Retry jusqu'à 8 fois avec 3s d'intervalle = 24s max
+    let premium = false
+    for (let i = 0; i < 8; i++) {
+      premium = await checkStatus()
+      if (premium) break
+      if (i < 7) await new Promise(r => setTimeout(r, 3000))
+    }
+
     setIsChecking(false)
 
     if (premium) {
       navigate('/dashboard')
     } else {
-      alert("Votre paiement n'est pas encore validé. Si vous venez de payer, veuillez patienter quelques minutes ou nous contacter.")
+      setCheckStep(2)
     }
   }
 
@@ -31,7 +41,6 @@ export default function Pricing() {
     const formattedExpiry = expiresAt
       ? expiresAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
       : null
-
     const isExpiringSoon = daysLeft !== null && daysLeft <= 7
 
     return (
@@ -51,21 +60,17 @@ export default function Pricing() {
                   </p>
                 )}
                 {daysLeft !== null && (
-                  <p
-                    className="text-sm"
-                    style={{
-                      marginTop: 6,
-                      color: isExpiringSoon ? '#e53e3e' : 'var(--teal)',
-                      fontWeight: 600
-                    }}
-                  >
+                  <p className="text-sm" style={{
+                    marginTop: 6,
+                    color: isExpiringSoon ? '#e53e3e' : 'var(--teal)',
+                    fontWeight: 600
+                  }}>
                     {isExpiringSoon
                       ? `⚠️ Plus que ${daysLeft} jour${daysLeft > 1 ? 's' : ''} — renouvelez maintenant`
                       : `✓ ${daysLeft} jours restants`}
                   </p>
                 )}
               </div>
-
               <ul className="pricing-features">
                 <li>✓ <strong>Historique illimité</strong> et graphiques</li>
                 <li>✓ <strong>Analyse détaillée</strong> de votre score</li>
@@ -74,35 +79,12 @@ export default function Pricing() {
                 <li>✓ Rappels intelligents</li>
                 <li>✓ Support prioritaire</li>
               </ul>
-
-              {isPending ? (
-                <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                  <p className="text-muted text-sm" style={{ marginBottom: 16 }}>
-                    Une fois le paiement effectué, cliquez ci-dessous pour renouveler votre accès.
-                  </p>
-                  <button
-                    className="btn btn-primary btn-full"
-                    onClick={handleCheck}
-                    disabled={isChecking}
-                  >
-                    {isChecking
-                      ? <span className="spinner" style={{ borderColor: 'var(--teal-light)', borderTopColor: 'var(--white)' }} />
-                      : 'Confirmer le renouvellement'}
-                  </button>
-                  <button className="btn btn-ghost btn-full" style={{ marginTop: 12 }} onClick={() => setIsPending(false)}>
-                    Annuler
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <button className="btn btn-primary btn-full" onClick={handleSubscribe}>
-                    Renouveler pour 1 mois
-                  </button>
-                  <button className="btn btn-outline btn-full" style={{ marginTop: 12 }} onClick={() => navigate('/dashboard')}>
-                    Retour au tableau de bord
-                  </button>
-                </>
-              )}
+              <button className="btn btn-primary btn-full" onClick={handleSubscribe}>
+                Renouveler pour 1 mois
+              </button>
+              <button className="btn btn-outline btn-full" style={{ marginTop: 12 }} onClick={() => navigate('/dashboard')}>
+                Retour au tableau de bord
+              </button>
             </div>
           </div>
         </div>
@@ -110,7 +92,6 @@ export default function Pricing() {
     )
   }
 
-  // Pas encore premium
   return (
     <div className="pricing-page">
       <div className="container">
@@ -126,9 +107,7 @@ export default function Pricing() {
           <div className="pricing-card">
             <div className="pricing-card-header">
               <h3>Gratuit</h3>
-              <div className="price">
-                <span className="amount">0€</span>
-              </div>
+              <div className="price"><span className="amount">0€</span></div>
               <p className="text-muted text-sm">Pour commencer à suivre vos symptômes.</p>
             </div>
             <ul className="pricing-features">
@@ -149,33 +128,82 @@ export default function Pricing() {
             <div className="popular-badge">Mensuel</div>
             <div className="pricing-card-header">
               <h3>Premium</h3>
-              <div className="price">
-                <span className="amount">Abonnement mensuel</span>
-              </div>
-              <p className="text-muted text-sm">
-                Renouvelable chaque mois. Annulez quand vous voulez.
-              </p>
+              <div className="price"><span className="amount">Abonnement mensuel</span></div>
+              <p className="text-muted text-sm">Renouvelable chaque mois. Annulez quand vous voulez.</p>
             </div>
 
             {isPending ? (
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
-                <h4 style={{ marginBottom: '16px' }}>Paiement en cours...</h4>
-                <p className="text-muted text-sm" style={{ marginBottom: '24px' }}>
-                  Une fois votre paiement terminé sur la page sécurisée, cliquez ci-dessous pour activer votre accès.
-                </p>
-                <button
-                  className="btn btn-primary btn-full"
-                  onClick={handleCheck}
-                  disabled={isChecking}
-                >
-                  {isChecking
-                    ? <span className="spinner" style={{ borderColor: 'var(--teal-light)', borderTopColor: 'var(--white)' }} />
-                    : 'Vérifier mon paiement'}
-                </button>
-                <button className="btn btn-ghost btn-full" style={{ marginTop: '12px' }} onClick={() => setIsPending(false)}>
-                  Annuler
-                </button>
+
+                {/* ÉTAPE 1 — Vérification en cours */}
+                {isChecking && (
+                  <>
+                    <div style={{ marginBottom: 20 }}>
+                      {/* Spinner animé */}
+                      <div style={{
+                        width: 56, height: 56, margin: '0 auto 16px',
+                        border: '4px solid #e5e7eb',
+                        borderTop: '4px solid var(--teal)',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                    </div>
+                    <h4 style={{ marginBottom: 8, color: '#111827' }}>Vérification en cours...</h4>
+                    <p className="text-muted text-sm" style={{ marginBottom: 0 }}>
+                      Nous confirmons votre paiement avec Chariow.<br />
+                      Cela peut prendre quelques secondes.
+                    </p>
+                  </>
+                )}
+
+                {/* ÉTAPE 2 — Échec après tous les retries */}
+                {!isChecking && checkStep === 2 && (
+                  <>
+                    <div style={{ fontSize: 48, marginBottom: 16 }}>⏳</div>
+                    <h4 style={{ marginBottom: 8, color: '#111827' }}>Paiement en cours de traitement</h4>
+                    <p className="text-muted text-sm" style={{ marginBottom: 24 }}>
+                      Votre paiement n'est pas encore confirmé. Si vous venez de payer, patientez 1 à 2 minutes et réessayez.
+                    </p>
+                    <button
+                      className="btn btn-primary btn-full"
+                      onClick={handleCheck}
+                    >
+                      Réessayer
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-full"
+                      style={{ marginTop: 12 }}
+                      onClick={() => { setIsPending(false); setCheckStep(0) }}
+                    >
+                      Annuler
+                    </button>
+                  </>
+                )}
+
+                {/* ÉTAPE 0 — En attente du clic */}
+                {!isChecking && checkStep === 0 && (
+                  <>
+                    <div style={{ fontSize: 48, marginBottom: 16 }}>⏳</div>
+                    <h4 style={{ marginBottom: 8, color: '#111827' }}>Paiement en cours...</h4>
+                    <p className="text-muted text-sm" style={{ marginBottom: 24 }}>
+                      Une fois votre paiement terminé sur la page sécurisée, cliquez ci-dessous pour activer votre accès Premium.
+                    </p>
+                    <button
+                      className="btn btn-primary btn-full"
+                      onClick={handleCheck}
+                    >
+                      Vérifier mon paiement
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-full"
+                      style={{ marginTop: 12 }}
+                      onClick={() => { setIsPending(false); setCheckStep(0) }}
+                    >
+                      Annuler
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
               <>
