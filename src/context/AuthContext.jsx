@@ -8,20 +8,24 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // onAuthStateChange gère TOUS les cas : session existante, token hash du mail, OTP...
+    // Il faut l'initialiser AVANT getSession pour ne manquer aucun event SIGNED_IN
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
       setLoading(false)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
+
     return () => subscription.unsubscribe()
   }, [])
 
   const signUp = async (email, password, fullName) => {
     const { data, error } = await supabase.auth.signUp({
       email, password,
-      options: { data: { full_name: fullName } }
+      options: {
+        data: { full_name: fullName },
+        // Redirige vers /#/auth/callback pour que HashRouter intercepte correctement
+        emailRedirectTo: `${window.location.origin}/#/auth/callback`,
+      }
     })
     return { data, error }
   }

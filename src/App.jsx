@@ -14,7 +14,8 @@ import Program from './pages/Program'
 import Score from './pages/Score'
 import './index.css'
 
-// Handles Supabase email confirmation links that return to /#access_token=...
+// Handles Supabase email confirmation links that return to /#/auth/callback
+// Le token est lu automatiquement par le SDK Supabase via onAuthStateChange
 function AuthCallback() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
@@ -69,7 +70,7 @@ export default function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/pricing" element={<Pricing />} />
             
-            {/* AUTH CALLBACK */}
+            {/* AUTH CALLBACK — reçoit les liens de confirmation email Supabase */}
             <Route path="/auth/callback" element={<AuthCallback />} />
             
             {/* PROTECTED ROUTES */}
