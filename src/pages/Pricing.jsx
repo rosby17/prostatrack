@@ -128,7 +128,7 @@ export default function Pricing() {
             <div className="popular-badge">Mensuel</div>
             <div className="pricing-card-header">
               <h3>Premium</h3>
-              <div className="price"><span className="amount">Abonnement mensuel</span></div>
+              <div className="price"><span className="amount">39€</span></div>
               <p className="text-muted text-sm">Renouvelable chaque mois. Annulez quand vous voulez.</p>
             </div>
 
