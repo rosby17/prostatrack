@@ -1,18 +1,31 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSubscription } from '../context/SubscriptionContext'
 import './Pricing.css'
 
 export default function Pricing() {
-  const { upgrade, isPremium } = useSubscription()
+  const { checkStatus, isPremium } = useSubscription()
   const navigate = useNavigate()
+  const [isPending, setIsPending] = useState(false)
+  const [isChecking, setIsChecking] = useState(false)
 
   const handleSubscribe = () => {
-    // Activate premium locally so it's ready when they return
-    upgrade()
     // Redirect to the Chariow payment link in a new tab
     window.open('https://nextagehealth.mychariow.shop/prd_sasc20', '_blank')
-    // Go to dashboard in the current app
-    navigate('/dashboard')
+    // Show the pending validation UI
+    setIsPending(true)
+  }
+
+  const handleCheck = async () => {
+    setIsChecking(true)
+    const premium = await checkStatus()
+    setIsChecking(false)
+    
+    if (premium) {
+      navigate('/dashboard')
+    } else {
+      alert("Votre paiement n'est pas encore validé. Si vous venez de payer, veuillez patienter quelques minutes ou nous contacter.")
+    }
   }
 
   if (isPremium) {
@@ -74,20 +87,43 @@ export default function Pricing() {
                 Pas d'abonnement. Payez une fois, profitez-en pour toujours.
               </p>
             </div>
-            <ul className="pricing-features">
-              <li>✓ <strong>Historique illimité</strong> et graphiques</li>
-              <li>✓ <strong>Analyse détaillée</strong> de votre score</li>
-              <li>✓ <strong>Programme complet</strong> (8 semaines)</li>
-              <li>✓ Export PDF pour votre urologue</li>
-              <li>✓ Rappels intelligents</li>
-              <li>✓ Support prioritaire à vie</li>
-            </ul>
-            <button className="btn btn-primary btn-full" onClick={handleSubscribe}>
-              Débloquer Premium à vie
-            </button>
-            <p className="text-xs text-muted text-center" style={{ marginTop: 16 }}>
-              Paiement sécurisé. Accès immédiat après validation.
-            </p>
+            
+            {isPending ? (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
+                <h4 style={{ marginBottom: '16px' }}>Paiement en cours...</h4>
+                <p className="text-muted text-sm" style={{ marginBottom: '24px' }}>
+                  Une fois votre paiement terminé sur la page sécurisée, cliquez ci-dessous pour vérifier l'activation de votre accès.
+                </p>
+                <button 
+                  className="btn btn-primary btn-full" 
+                  onClick={handleCheck}
+                  disabled={isChecking}
+                >
+                  {isChecking ? <span className="spinner" style={{ borderColor: 'var(--teal-light)', borderTopColor: 'var(--white)' }} /> : 'Vérifier mon paiement'}
+                </button>
+                <button className="btn btn-ghost btn-full" style={{ marginTop: '12px' }} onClick={() => setIsPending(false)}>
+                  Annuler
+                </button>
+              </div>
+            ) : (
+              <>
+                <ul className="pricing-features">
+                  <li>✓ <strong>Historique illimité</strong> et graphiques</li>
+                  <li>✓ <strong>Analyse détaillée</strong> de votre score</li>
+                  <li>✓ <strong>Programme complet</strong> (8 semaines)</li>
+                  <li>✓ Export PDF pour votre urologue</li>
+                  <li>✓ Rappels intelligents</li>
+                  <li>✓ Support prioritaire à vie</li>
+                </ul>
+                <button className="btn btn-primary btn-full" onClick={handleSubscribe}>
+                  Débloquer Premium à vie
+                </button>
+                <p className="text-xs text-muted text-center" style={{ marginTop: 16 }}>
+                  Paiement sécurisé. Accès immédiat après validation.
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>
