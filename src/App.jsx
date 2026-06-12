@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
+import { useEffect } from 'react'
+import { HashRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
 import { LoginPage, RegisterPage } from './pages/Auth'
@@ -8,6 +9,24 @@ import Progress from './pages/Progress'
 import Program from './pages/Program'
 import Score from './pages/Score'
 import './index.css'
+
+// Handles Supabase email confirmation links that return to /#access_token=...
+function AuthCallback() {
+  const { user, loading } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!loading) {
+      if (user) {
+        navigate('/dashboard', { replace: true })
+      } else {
+        navigate('/login', { replace: true })
+      }
+    }
+  }, [user, loading, navigate])
+
+  return <div className="page-loader"><div className="spinner spinner-lg" /></div>
+}
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -36,9 +55,10 @@ function AppLayout({ page: Page }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AuthProvider>
         <Routes>
+          <Route path="/" element={<AuthCallback />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/dashboard" element={<AppLayout page={Dashboard} />} />
@@ -49,6 +69,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </AuthProvider>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
