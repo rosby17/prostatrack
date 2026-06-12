@@ -23,10 +23,23 @@ export function AuthProvider({ children }) {
       email, password,
       options: {
         data: { full_name: fullName },
-        // Redirige vers /#/auth/callback pour que HashRouter intercepte correctement
         emailRedirectTo: `${window.location.origin}/#/auth/callback`,
       }
     })
+
+    // Créer le profil immédiatement si l'user est créé
+    if (data?.user && !error) {
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: data.user.id,
+          is_premium: false,
+          premium_activated_at: null,
+          chariow_sale_id: null,
+          premium_expires_at: null,
+        })
+    }
+
     return { data, error }
   }
 
