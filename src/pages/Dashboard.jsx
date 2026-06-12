@@ -4,6 +4,7 @@ import { format, subDays } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { MOCK_LOGS, MOCK_PROGRAM } from '../lib/mockData'
 import PremiumGate from '../components/PremiumGate'
+import { useAuth } from '../context/AuthContext'
 import './Dashboard.css'
 
 function StatCard({ label, value, unit, trend, color = 'green' }) {
@@ -35,6 +36,14 @@ function MiniBar({ value, max, color }) {
 export default function Dashboard() {
   const [params] = useSearchParams()
   const isDemo = params.get('demo') === 'true'
+  const { user } = useAuth()
+
+  // Récupérer le prénom depuis les métadonnées Supabase
+  const userName = user?.user_metadata?.full_name
+    || user?.user_metadata?.name
+    || user?.email?.split('@')[0]
+    || 'vous'
+
   const logs = MOCK_LOGS
 
   const today = logs[logs.length - 1]
@@ -71,11 +80,11 @@ export default function Dashboard() {
     <div className="dashboard">
       <div className="dashboard__header">
         <div>
-          <h1>Bonjour Jean-Michel</h1>
+          <h1>Bonjour {userName} 👋</h1>
           <p className="text-muted text-sm">{format(new Date(), "EEEE d MMMM yyyy", { locale: fr })}</p>
         </div>
         <Link to={`/log${isDemo ? '?demo=true' : ''}`} className="btn btn-primary">
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
           Saisir aujourd'hui
         </Link>
       </div>
@@ -93,7 +102,7 @@ export default function Dashboard() {
         </div>
         <div className="score-banner__ring">
           <svg viewBox="0 0 80 80" width="80" height="80">
-            <circle cx="40" cy="40" r="32" fill="none" stroke="var(--gray-100)" strokeWidth="8"/>
+            <circle cx="40" cy="40" r="32" fill="none" stroke="var(--gray-100)" strokeWidth="8" />
             <circle
               cx="40" cy="40" r="32"
               fill="none" stroke={scoreColor} strokeWidth="8"
