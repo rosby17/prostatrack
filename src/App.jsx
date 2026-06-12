@@ -1,7 +1,11 @@
 import { useEffect } from 'react'
 import { HashRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { SubscriptionProvider } from './context/SubscriptionContext'
 import Layout from './components/Layout'
+import PremiumGate from './components/PremiumGate'
+import LandingPage from './pages/LandingPage'
+import Pricing from './pages/Pricing'
 import { LoginPage, RegisterPage } from './pages/Auth'
 import Dashboard from './pages/Dashboard'
 import LogDay from './pages/LogDay'
@@ -57,17 +61,40 @@ export default function App() {
   return (
     <HashRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<AuthCallback />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/dashboard" element={<AppLayout page={Dashboard} />} />
-          <Route path="/log" element={<AppLayout page={LogDay} />} />
-          <Route path="/progress" element={<AppLayout page={Progress} />} />
-          <Route path="/program" element={<AppLayout page={Program} />} />
-          <Route path="/score" element={<AppLayout page={Score} />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+        <SubscriptionProvider>
+          <Routes>
+            {/* PUBLIC ROUTES */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/pricing" element={<Pricing />} />
+            
+            {/* AUTH CALLBACK */}
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            
+            {/* PROTECTED ROUTES */}
+            <Route path="/dashboard" element={<AppLayout page={Dashboard} />} />
+            <Route path="/log" element={<AppLayout page={LogDay} />} />
+            <Route path="/progress" element={
+              <AppLayout page={() => (
+                <PremiumGate featureName="la progression détaillée">
+                  <Progress />
+                </PremiumGate>
+              )} />
+            } />
+            <Route path="/program" element={<AppLayout page={Program} />} />
+            <Route path="/score" element={
+              <AppLayout page={() => (
+                <PremiumGate featureName="l'analyse détaillée du score">
+                  <Score />
+                </PremiumGate>
+              )} />
+            } />
+            
+            {/* CATCH ALL */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </SubscriptionProvider>
       </AuthProvider>
     </HashRouter>
   )

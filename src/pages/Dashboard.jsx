@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { format, subDays } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { MOCK_LOGS, MOCK_PROGRAM } from '../lib/mockData'
+import PremiumGate from '../components/PremiumGate'
 import './Dashboard.css'
 
 function StatCard({ label, value, unit, trend, color = 'green' }) {
@@ -58,7 +59,7 @@ export default function Dashboard() {
     (stats.energy / 5 * 20)
   )
 
-  const scoreColor = score >= 70 ? 'var(--green)' : score >= 45 ? 'var(--amber)' : 'var(--red)'
+  const scoreColor = score >= 70 ? 'var(--teal)' : score >= 45 ? 'var(--warning)' : 'var(--error)'
   const scoreLabel = score >= 70 ? 'Bon' : score >= 45 ? 'En progression' : 'À améliorer'
 
   const nextProgram = MOCK_PROGRAM.find(p => !p.done)
@@ -112,10 +113,10 @@ export default function Dashboard() {
 
       {/* STAT CARDS */}
       <div className="stats-grid">
-        <StatCard label="Réveils nocturnes" value={stats.wakings} unit="/nuit" trend={Math.round(stats.wakingsTrend * 10) / 10} color="green" />
+        <StatCard label="Réveils nocturnes" value={stats.wakings} unit="/nuit" trend={Math.round(stats.wakingsTrend * 10) / 10} color="teal" />
         <StatCard label="Qualité du sommeil" value={stats.sleep} unit="/5" trend={-Math.round(stats.sleepTrend * 10) / 10} color="blue" />
-        <StatCard label="Urgence urinaire" value={stats.urgency} unit="/5" color="amber" />
-        <StatCard label="Niveau d'énergie" value={stats.energy} unit="/5" color="purple" />
+        <StatCard label="Urgence urinaire" value={stats.urgency} unit="/5" color="warning" />
+        <StatCard label="Niveau d'énergie" value={stats.energy} unit="/5" color="terracotta" />
       </div>
 
       <div className="dashboard__grid">
@@ -169,21 +170,23 @@ export default function Dashboard() {
             </div>
             <span className="text-xs text-muted">{Math.round((doneCount / MOCK_PROGRAM.length) * 100)}% complété</span>
           </div>
-          {nextProgram && (
-            <div className="next-lesson">
-              <div className={`next-lesson__type badge ${nextProgram.type === 'video' ? 'badge-blue' : 'badge-green'}`}>
-                {nextProgram.type === 'video' ? 'Vidéo' : 'Guide PDF'}
+          <PremiumGate featureName="le Programme complet">
+            {nextProgram && (
+              <div className="next-lesson">
+                <div className={`next-lesson__type badge ${nextProgram.type === 'video' ? 'badge-primary' : 'badge-accent'}`}>
+                  {nextProgram.type === 'video' ? 'Vidéo' : 'Guide PDF'}
+                </div>
+                <h4>Semaine {nextProgram.week} — {nextProgram.title}</h4>
+                <p className="text-sm text-muted">{nextProgram.description}</p>
+                <div className="next-lesson__footer">
+                  <span className="text-xs text-muted">{nextProgram.duration}</span>
+                  <Link to={`/program${isDemo ? '?demo=true' : ''}`} className="btn btn-primary btn-sm">
+                    Continuer
+                  </Link>
+                </div>
               </div>
-              <h4>Semaine {nextProgram.week} — {nextProgram.title}</h4>
-              <p className="text-sm text-muted">{nextProgram.description}</p>
-              <div className="next-lesson__footer">
-                <span className="text-xs text-muted">{nextProgram.duration}</span>
-                <Link to={`/program${isDemo ? '?demo=true' : ''}`} className="btn btn-primary btn-sm">
-                  Continuer
-                </Link>
-              </div>
-            </div>
-          )}
+            )}
+          </PremiumGate>
         </div>
       </div>
     </div>

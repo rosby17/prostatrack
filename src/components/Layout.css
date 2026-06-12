@@ -54,28 +54,55 @@
 .sidebar__link {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  color: var(--gray-600);
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  transition: all 0.2s var(--ease);
   font-weight: 500;
-  color: var(--gray-500);
-  transition: all 0.15s var(--ease);
+  font-size: 15px;
 }
 
 .sidebar__link:hover {
-  background: var(--gray-50);
-  color: var(--dark);
+  background: var(--gray-100);
+  color: var(--charcoal);
 }
 
 .sidebar__link--active {
-  background: var(--green-light);
-  color: var(--green-dark);
-  font-weight: 600;
+  background: var(--teal-light);
+  color: var(--teal-dark);
 }
 
 .sidebar__link--active svg {
-  color: var(--green);
+  color: var(--teal);
+}
+
+.premium-lock {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.sidebar__upgrade {
+  margin: 16px;
+  padding: 16px;
+  background: var(--teal-light);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(13, 115, 119, 0.1);
+}
+
+.sidebar__upgrade h4 {
+  color: var(--teal-dark);
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.sidebar__upgrade p {
+  font-size: 13px;
+  color: var(--teal);
+  margin-bottom: 12px;
+  line-height: 1.4;
 }
 
 .sidebar__footer {

@@ -1,0 +1,147 @@
+.pricing-page {
+  padding: 80px 0;
+  min-height: calc(100vh - var(--header-h));
+}
+
+.pricing-header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.billing-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  font-weight: 500;
+  color: var(--gray-600);
+}
+
+.billing-toggle span.active {
+  color: var(--charcoal);
+  font-weight: 600;
+}
+
+.toggle-btn {
+  width: 56px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--teal);
+  position: relative;
+  transition: background 0.3s;
+}
+
+.toggle-btn.off {
+  background: var(--gray-400);
+}
+
+.toggle-knob {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--white);
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  transition: transform 0.3s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.toggle-btn.on .toggle-knob {
+  transform: translateX(24px);
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.pricing-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.pricing-card.premium {
+  border: 2px solid var(--teal);
+  box-shadow: var(--shadow-lg);
+  transform: scale(1.02);
+}
+
+.popular-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--teal);
+  color: var(--white);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pricing-card-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.pricing-card-header h3 {
+  font-size: 24px;
+  color: var(--charcoal);
+  margin-bottom: 16px;
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.amount {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--charcoal);
+  font-family: var(--font-heading);
+}
+
+.period {
+  font-size: 16px;
+  color: var(--gray-600);
+}
+
+.pricing-features {
+  list-style: none;
+  margin-bottom: 32px;
+}
+
+.pricing-features li {
+  padding: 12px 0;
+  color: var(--charcoal);
+  display: flex;
+  align-items: center;
+}
+
+.pricing-features li.disabled {
+  color: var(--gray-400);
+}
+
+@media (max-width: 768px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+  .pricing-card.premium {
+    transform: none;
+  }
+}
