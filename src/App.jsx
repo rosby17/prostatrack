@@ -21,6 +21,21 @@ function AuthCallback() {
   const navigate = useNavigate()
 
   useEffect(() => {
+    // Vérifier s'il y a une erreur dans le hash de l'URL
+    const hash = window.location.hash
+    if (hash.includes('error=')) {
+      const params = new URLSearchParams(hash.replace('#', ''))
+      const errorCode = params.get('error_code')
+      const errorDesc = params.get('error_description')
+
+      if (errorCode === 'otp_expired') {
+        navigate('/login?error=link_expired', { replace: true })
+      } else {
+        navigate('/login?error=auth_failed', { replace: true })
+      }
+      return
+    }
+
     if (!loading) {
       if (user) {
         navigate('/dashboard', { replace: true })

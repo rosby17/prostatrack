@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import './Auth.css'
 
@@ -9,6 +9,8 @@ export function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [urlParams] = useSearchParams()
+  const urlError = urlParams.get('error')
   const [showReset, setShowReset] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
   const [resetSent, setResetSent] = useState(false)
@@ -85,12 +87,7 @@ export function LoginPage() {
               <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={resetLoading}>
                 {resetLoading ? <span className="spinner" /> : 'Envoyer le lien'}
               </button>
-              <button
-                type="button"
-                className="btn btn-ghost btn-full"
-                style={{ marginTop: 12 }}
-                onClick={() => setShowReset(false)}
-              >
+              <button type="button" className="btn btn-ghost btn-full" style={{ marginTop: 12 }} onClick={() => setShowReset(false)}>
                 Retour
               </button>
             </form>
@@ -109,6 +106,17 @@ export function LoginPage() {
         </div>
         <h1 className="auth-title">Bon retour</h1>
         <p className="auth-sub">Connectez-vous à votre espace de suivi</p>
+
+        {urlError === 'link_expired' && (
+          <div style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: 8, padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#856404' }}>
+            ⚠️ Votre lien de confirmation a expiré. Inscrivez-vous à nouveau ou contactez le support.
+          </div>
+        )}
+        {urlError === 'auth_failed' && (
+          <div style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: 8, padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#856404' }}>
+            ⚠️ Une erreur d'authentification est survenue. Veuillez réessayer.
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
