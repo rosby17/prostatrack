@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuth } from '../context/AuthContext'
 import { useUserData } from '../lib/useUserData'
+import { useGamification, BADGES } from '../lib/useGamification'
 import PremiumGate from '../components/PremiumGate'
 import './Dashboard.css'
 
@@ -29,6 +30,127 @@ function MiniBar({ value, max, color }) {
   return (
     <div className="mini-bar">
       <div className="mini-bar__fill" style={{ width: `${pct}%`, background: color }} />
+    </div>
+  )
+}
+
+// Composant Streak
+function StreakCard({ streak }) {
+  const flames = Math.min(streak.current, 7)
+  return (
+    <div className="card streak-card" style={{ background: streak.current >= 3 ? 'linear-gradient(135deg, #fff7ed, #fff)' : undefined }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div>
+          <p className="text-xs text-muted" style={{ fontWeight: 600, marginBottom: 4 }}>SÉRIE EN COURS</p>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: 36, fontWeight: 800, color: streak.current >= 3 ? '#f97316' : 'var(--charcoal)' }}>
+              {streak.current}
+            </span>
+            <span className="text-muted" style={{ fontSize: 14 }}>jour{streak.current > 1 ? 's' : ''}</span>
+          </div>
+        </div>
+        <div style={{ fontSize: 40 }}>
+          {streak.current === 0 ? '💤' : streak.current < 3 ? '🌱' : streak.current < 7 ? '🔥' : '⚡'}
+        </div>
+      </div>
+      {/* Mini flammes visuelles */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+        {Array.from({ length: 7 }, (_, i) => (
+          <div key={i} style={{
+            flex: 1, height: 6, borderRadius: 99,
+            background: i < streak.current ? '#f97316' : 'var(--gray-100)',
+            transition: 'background 0.3s'
+          }} />
+        ))}
+      </div>
+      <p className="text-xs text-muted">
+        {streak.current === 0 ? 'Saisissez votre journal pour commencer une série !' :
+          streak.current < 3 ? `Plus que ${3 - streak.current} jour(s) pour gagner le badge 🔥` :
+            streak.current < 7 ? `Plus que ${7 - streak.current} jour(s) pour la semaine parfaite ⚡` :
+              `Record personnel : ${streak.longest} jours 🏆`}
+      </p>
+    </div>
+  )
+}
+
+// Composant Badges
+function BadgesCard({ badges, allBadges }) {
+  const earned = allBadges.filter(b => badges.includes(b.key))
+  const locked = allBadges.filter(b => !badges.includes(b.key))
+
+  return (
+    <div className="card">
+      <div className="card__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <h3>Mes badges</h3>
+        <span className="badge badge-primary">{earned.length}/{allBadges.length}</span>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {earned.map(b => (
+          <div key={b.key} title={b.desc} style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+            padding: '10px 12px', borderRadius: 12,
+            background: `${b.color}15`, border: `1px solid ${b.color}30`,
+            minWidth: 64, cursor: 'default'
+          }}>
+            <span style={{ fontSize: 24 }}>{b.icon}</span>
+            <span style={{ fontSize: 10, fontWeight: 600, color: b.color, textAlign: 'center', lineHeight: 1.2 }}>{b.label}</span>
+          </div>
+        ))}
+        {locked.slice(0, 4).map(b => (
+          <div key={b.key} title={`${b.desc} (verrouillé)`} style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+            padding: '10px 12px', borderRadius: 12,
+            background: 'var(--gray-100)', border: '1px solid var(--gray-200)',
+            minWidth: 64, opacity: 0.5, cursor: 'default', filter: 'grayscale(1)'
+          }}>
+            <span style={{ fontSize: 24 }}>{b.icon}</span>
+            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--gray-400)', textAlign: 'center', lineHeight: 1.2 }}>{b.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Notification nouveau badge
+function BadgeNotification({ badgeKey }) {
+  const badge = BADGES.find(b => b.key === badgeKey)
+  if (!badge) return null
+  return (
+    <div style={{
+      position: 'fixed', bottom: 24, right: 24, zIndex: 100,
+      background: 'white', borderRadius: 16, padding: '16px 20px',
+      boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+      border: `2px solid ${badge.color}`,
+      display: 'flex', alignItems: 'center', gap: 12,
+      animation: 'slideIn 0.4s ease'
+    }}>
+      <style>{`@keyframes slideIn { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`}</style>
+      <span style={{ fontSize: 36 }}>{badge.icon}</span>
+      <div>
+        <p style={{ fontSize: 12, color: badge.color, fontWeight: 700, marginBottom: 2 }}>BADGE DÉBLOQUÉ !</p>
+        <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--charcoal)' }}>{badge.label}</p>
+        <p style={{ fontSize: 12, color: 'var(--gray-400)' }}>{badge.desc}</p>
+      </div>
+    </div>
+  )
+}
+
+// Insight quotidien
+function InsightCard({ insight }) {
+  if (!insight) return null
+  return (
+    <div className="card" style={{
+      background: `linear-gradient(135deg, ${insight.color}08, white)`,
+      border: `1px solid ${insight.color}20`
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+        <span style={{ fontSize: 28, flexShrink: 0 }}>{insight.icon}</span>
+        <div>
+          <p style={{ fontSize: 13, fontWeight: 700, color: insight.color, marginBottom: 4 }}>INSIGHT DU JOUR</p>
+          <p style={{ fontSize: 15, color: 'var(--charcoal)', lineHeight: 1.5 }}>{insight.text}</p>
+        </div>
+      </div>
     </div>
   )
 }
@@ -66,22 +188,24 @@ export default function Dashboard() {
     (stats.energy / 5 * 20)
   ))
 
+  const doneCount = program.filter(p => p.done).length
+  const { streak, badges, newBadges, getDailyInsight, allBadges } = useGamification(logs, score, doneCount)
+  const insight = getDailyInsight()
+
   const scoreColor = score >= 70 ? 'var(--teal)' : score >= 45 ? 'var(--warning)' : 'var(--error)'
   const scoreLabel = score >= 70 ? 'Bon' : score >= 45 ? 'En progression' : 'À améliorer'
-
   const firstLog = logs[0]
   const wakingStart = firstLog?.night_wakings ?? stats.wakings
-
   const nextProgram = program.find(p => !p.done)
-  const doneCount = program.filter(p => p.done).length
   const recentLogs = logs.slice(-7).reverse()
 
-  if (loading) {
-    return <div className="page-loader"><div className="spinner spinner-lg" /></div>
-  }
+  if (loading) return <div className="page-loader"><div className="spinner spinner-lg" /></div>
 
   return (
     <div className="dashboard">
+      {/* Notifications nouveaux badges */}
+      {newBadges.map(key => <BadgeNotification key={key} badgeKey={key} />)}
+
       <div className="dashboard__header">
         <div>
           <h1>Bonjour {userName} 👋</h1>
@@ -95,13 +219,13 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* Aucune donnée encore */}
+      {/* Aucune donnée */}
       {logs.length === 0 && (
         <div className="card" style={{ textAlign: 'center', padding: '40px 24px', marginBottom: 24 }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
           <h3 style={{ marginBottom: 8 }}>Commencez votre suivi</h3>
           <p className="text-muted text-sm" style={{ marginBottom: 24 }}>
-            Saisissez votre premier journal quotidien pour voir vos statistiques apparaître ici.
+            Saisissez votre premier journal quotidien pour voir vos statistiques et débloquer vos premiers badges.
           </p>
           <Link to="/log" className="btn btn-primary">Saisir aujourd'hui</Link>
         </div>
@@ -109,36 +233,34 @@ export default function Dashboard() {
 
       {logs.length > 0 && (
         <>
-          {/* SCORE BANNER */}
-          <div className="score-banner">
-            <div className="score-banner__left">
-              <span className="text-sm text-muted">Score de santé prostatique</span>
-              <div className="score-banner__score" style={{ color: scoreColor }}>
-                {score}<span>/100</span>
+          {/* INSIGHT DU JOUR */}
+          <InsightCard insight={insight} />
+
+          {/* STREAK + SCORE */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <StreakCard streak={streak} />
+
+            {/* Score banner compact */}
+            <div className="score-banner" style={{ margin: 0 }}>
+              <div className="score-banner__left">
+                <span className="text-sm text-muted">Score de santé</span>
+                <div className="score-banner__score" style={{ color: scoreColor }}>
+                  {score}<span>/100</span>
+                </div>
+                <span className="badge" style={{ background: `${scoreColor}18`, color: scoreColor, border: `1px solid ${scoreColor}30` }}>
+                  {scoreLabel}
+                </span>
               </div>
-              <span className="badge" style={{ background: `${scoreColor}18`, color: scoreColor, border: `1px solid ${scoreColor}30` }}>
-                {scoreLabel}
-              </span>
-            </div>
-            <div className="score-banner__ring">
-              <svg viewBox="0 0 80 80" width="80" height="80">
-                <circle cx="40" cy="40" r="32" fill="none" stroke="var(--gray-100)" strokeWidth="8" />
-                <circle cx="40" cy="40" r="32" fill="none" stroke={scoreColor} strokeWidth="8"
-                  strokeDasharray={`${score * 2.01} 201`} strokeLinecap="round"
-                  transform="rotate(-90 40 40)" style={{ transition: 'stroke-dasharray 1s ease' }}
-                />
-                <text x="40" y="45" textAnchor="middle" fontSize="16" fontWeight="700" fill={scoreColor}>{score}</text>
-              </svg>
-            </div>
-            <div className="score-banner__message">
-              {logs.length >= 7 ? (
-                <>
-                  <p>Vous avez réduit vos réveils nocturnes de <strong>{wakingStart} à {stats.wakings}</strong> sur vos {logs.length} derniers jours.</p>
-                  <p className="text-sm text-muted">Continuez le programme pour consolider vos résultats.</p>
-                </>
-              ) : (
-                <p className="text-sm text-muted">Continuez à saisir vos données quotidiennes pour voir votre progression.</p>
-              )}
+              <div className="score-banner__ring">
+                <svg viewBox="0 0 80 80" width="80" height="80">
+                  <circle cx="40" cy="40" r="32" fill="none" stroke="var(--gray-100)" strokeWidth="8" />
+                  <circle cx="40" cy="40" r="32" fill="none" stroke={scoreColor} strokeWidth="8"
+                    strokeDasharray={`${score * 2.01} 201`} strokeLinecap="round"
+                    transform="rotate(-90 40 40)" style={{ transition: 'stroke-dasharray 1s ease' }}
+                  />
+                  <text x="40" y="45" textAnchor="middle" fontSize="16" fontWeight="700" fill={scoreColor}>{score}</text>
+                </svg>
+              </div>
             </div>
           </div>
 
@@ -149,6 +271,9 @@ export default function Dashboard() {
             <StatCard label="Urgence urinaire" value={stats.urgency} unit="/5" color="warning" />
             <StatCard label="Niveau d'énergie" value={stats.energy} unit="/5" color="terracotta" />
           </div>
+
+          {/* BADGES */}
+          <BadgesCard badges={badges} allBadges={allBadges} />
         </>
       )}
 
@@ -164,11 +289,7 @@ export default function Dashboard() {
           ) : (
             <div className="logs-table">
               <div className="logs-table__head">
-                <span>Date</span>
-                <span>Réveils</span>
-                <span>Sommeil</span>
-                <span>Urgence</span>
-                <span>Énergie</span>
+                <span>Date</span><span>Réveils</span><span>Sommeil</span><span>Urgence</span><span>Énergie</span>
               </div>
               {recentLogs.map(log => (
                 <div className="logs-table__row" key={log.id}>
@@ -217,9 +338,7 @@ export default function Dashboard() {
                 <p className="text-sm text-muted">{nextProgram.description}</p>
                 <div className="next-lesson__footer">
                   <span className="text-xs text-muted">{nextProgram.duration}</span>
-                  <Link to={`/program${isDemo ? '?demo=true' : ''}`} className="btn btn-primary btn-sm">
-                    Continuer
-                  </Link>
+                  <Link to={`/program${isDemo ? '?demo=true' : ''}`} className="btn btn-primary btn-sm">Continuer</Link>
                 </div>
               </div>
             )}

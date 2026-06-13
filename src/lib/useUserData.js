@@ -76,7 +76,14 @@ export function useUserData(isDemo = false) {
       .select()
       .single()
 
-    if (!error) await fetchLogs()
+    if (!error) {
+      // Mettre à jour le streak
+      await supabase.rpc('update_streak', {
+        p_user_id: user.id,
+        p_log_date: logData.date
+      })
+      await fetchLogs()
+    }
     return { data, error }
   }
 
