@@ -8,13 +8,10 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // onAuthStateChange gère TOUS les cas : session existante, token hash du mail, OTP...
-    // Il faut l'initialiser AVANT getSession pour ne manquer aucun event SIGNED_IN
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
       setLoading(false)
     })
-
     return () => subscription.unsubscribe()
   }, [])
 
@@ -26,20 +23,15 @@ export function AuthProvider({ children }) {
         emailRedirectTo: `${window.location.origin}/#/auth/callback`,
       }
     })
-
-    // Créer le profil immédiatement si l'user est créé
     if (data?.user && !error) {
-      await supabase
-        .from('profiles')
-        .upsert({
-          id: data.user.id,
-          is_premium: false,
-          premium_activated_at: null,
-          chariow_sale_id: null,
-          premium_expires_at: null,
-        })
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        is_premium: false,
+        premium_activated_at: null,
+        chariow_sale_id: null,
+        premium_expires_at: null,
+      })
     }
-
     return { data, error }
   }
 
@@ -52,8 +44,32 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut()
   }
 
+  // Mettre à jour le nom complet
+  const updateProfile = async (fullName) => {
+    const { data, error } = await supabase.auth.updateUser({
+      data: { full_name: fullName }
+    })
+    if (!error && data.user) setUser(data.user)
+    return { data, error }
+  }
+
+  // Changer le mot de passe
+  const updatePassword = async (newPassword) => {
+    const { data, error } = await supabase.auth.updateUser({ password: newPassword })
+    return { data, error }
+  }
+
+  // Changer l'email
+  const updateEmail = async (newEmail) => {
+    const { data, error } = await supabase.auth.updateUser({
+      email: newEmail,
+      options: { emailRedirectTo: `${window.location.origin}/#/auth/callback` }
+    })
+    return { data, error }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, updateProfile, updatePassword, updateEmail }}>
       {children}
     </AuthContext.Provider>
   )

@@ -14,6 +14,9 @@ import Program from './pages/Program'
 import Score from './pages/Score'
 import './index.css'
 import { supabase } from './lib/supabase'
+import Settings from './pages/Settings'
+
+
 
 // Handles Supabase email confirmation links that return to /#/auth/callback
 function AuthCallback() {
@@ -162,6 +165,7 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/settings" element={<AppLayout page={Settings} />} />
 
             {/* AUTH CALLBACK — reçoit les liens de confirmation email Supabase */}
             <Route path="/auth/callback" element={<AuthCallback />} />
